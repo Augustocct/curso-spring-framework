@@ -7,11 +7,15 @@ import br.com.alura.screenmatch.model.Episodio;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
 import java.util.Comparator;
+import java.util.DoubleSummaryStatistics;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.cglib.core.Local;
@@ -60,40 +64,71 @@ public class Principal {
         // .map(n -> n.toUpperCase())
         // .forEach(System.out::println);
 
-        List<DadosEpisodio> dadosEpisodios = temporadas.stream()
-                .flatMap(t -> t.episodios().stream())
-                .collect(Collectors.toList());
-
-        System.out.println("\nTop 5 eps: ");
-        dadosEpisodios.stream()
-                .filter(e -> !e.avaliacao().equalsIgnoreCase("N/A"))
-                .sorted(Comparator.comparing(DadosEpisodio::avaliacao).reversed())
-                .limit(5)
-                .forEach(System.out::println);
+        // List<DadosEpisodio> dadosEpisodios = temporadas.stream()
+        // .flatMap(t -> t.episodios().stream())
+        // .collect(Collectors.toList());
+        // }
+        // System.out.println("\nTop 10 eps: ");
+        // dadosEpisodios.stream()
+        // .filter(e -> !e.avaliacao().equalsIgnoreCase("N/A"))
+        // .peek(e -> System.out.println("Primeiro Filtro(N/A) " + e))
+        // .sorted(Comparator.comparing(DadosEpisodio::avaliacao).reversed())
+        // .peek(e -> System.out.println("Ordenação " + e))
+        // .limit(10)
+        // .peek(e -> System.out.println("Limite " + e))
+        // .map(e-> e.titulo().toUpperCase())
+        // .peek(e -> System.out.println("Mapeamento " + e))
+        // .forEach(System.out::println);
 
         List<Episodio> episodios = temporadas.stream()
                 .flatMap(t -> t.episodios().stream()
-                        .map(d -> new Episodio(t.numero(), d))
-                        ).collect(Collectors.toList());
-                
+                        .map(d -> new Episodio(t.numero(), d)))
+                .collect(Collectors.toList());
 
         episodios.forEach(System.out::println);
 
-        System.out.println("A partir de que ano voce deseja ver os episodios ?");
-        var ano = leitura.nextInt();
-        leitura.nextLine();
+        // System.out.println("Digite um trecho do titulo do episodio: ");
+        // var trechoTitulo = leitura.nextLine();
+        // Optional<Episodio> episodioBuscado = episodios.stream()
+        //         .filter(e -> e.getTitulo().toUpperCase().contains(trechoTitulo.toUpperCase()))
+        //         .findFirst();
+        // if (episodioBuscado.isPresent()) {
+        //     System.out.println("Episodio encontrado!");
+        //     System.out.println("Temporada: " + episodioBuscado.get().getTemporada());
+        // } else {
+        //     System.out.println("Episodio nao encontrado ");
+        // }
 
-        LocalDate dataBusca = LocalDate.of(ano, 1, 1);
+        // System.out.println("A partir de que ano voce deseja ver os episodios ?");
+        // var ano = leitura.nextInt();
+        // leitura.nextLine();
 
-        DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        // LocalDate dataBusca = LocalDate.of(ano, 1, 1);
 
-        episodios.stream()
-            .filter(e -> e.getDataLancamentoEpisodio() != null && e.getDataLancamentoEpisodio().isAfter(dataBusca))
-            .forEach(e -> System.out.println(
-                "Temporada: " + e.getTemporada() + 
-                            "Episodio: " + e.getTitulo() + 
-                            "Data de lançamento" + e.getDataLancamentoEpisodio().format(formatador)
-            ));
+        // DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // episodios.stream()
+        // .filter(e -> e.getDataLancamentoEpisodio() != null &&
+        // e.getDataLancamentoEpisodio().isAfter(dataBusca))
+        // .forEach(e -> System.out.println(
+        // "Temporada: " + e.getTemporada() +
+        // "Episodio: " + e.getTitulo() +
+        // "Data de lançamento" + e.getDataLancamentoEpisodio().format(formatador)
+        // ));
+
+        Map<Integer, Double> avaliacaoPorTemporada = episodios.stream()
+                .filter(e -> e.getAvaliacao() > 0.0)
+                .collect(Collectors.groupingBy(Episodio::getTemporada,
+                         Collectors.averagingDouble(Episodio::getAvaliacao)));
+                         System.out.println(avaliacaoPorTemporada);
+                         
+        DoubleSummaryStatistics est = episodios.stream()
+                .filter(e -> e.getAvaliacao() > 0.0)
+                .collect(Collectors.summarizingDouble(Episodio::getAvaliacao));
+                System.out.println("Media: " +est.getAverage());
+                System.out.println("Melhor ep: " + est.getMax());
+                System.out.println("Pior ep: " + est.getMin());
+                System.out.println("Quantidade: " + est.getCount());
     }
 
 }
